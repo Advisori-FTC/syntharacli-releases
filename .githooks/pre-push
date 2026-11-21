@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Verhindert Pushes mit Zugangsdaten (Advisori-FTC, „Keine Passwörter im Code“).
+# Einrichten: git config core.hooksPath .githooks
+set -euo pipefail
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-push: gitleaks fehlt (brew install gitleaks) – Push abgebrochen." >&2
+  exit 1
+fi
+z40=0000000000000000000000000000000000000000
+while read -r _lref lsha _rref rsha; do
+  [ "$lsha" = "$z40" ] && continue
+  if [ "$rsha" = "$z40" ]; then range="$lsha --not --remotes"; else range="$rsha..$lsha"; fi
+  gitleaks git --no-banner --redact --log-opts="$range" . || {
+    echo "pre-push: gitleaks hat Zugangsdaten gefunden – Wert entfernen, nach Infisical/Env verschieben und rotieren." >&2
+    exit 1
+  }
+done

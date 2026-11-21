@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Verhindert Commits mit Zugangsdaten (Advisori-FTC, „Keine Passwörter im Code“).
+# Einrichten: git config core.hooksPath .githooks
+set -euo pipefail
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: gitleaks fehlt (brew install gitleaks) – Commit abgebrochen." >&2
+  exit 1
+fi
+
+gitleaks git --no-banner --redact --pre-commit --staged . || {
+  echo "pre-commit: gitleaks hat Zugangsdaten gefunden – Commit abgebrochen." >&2
+  exit 1
+}

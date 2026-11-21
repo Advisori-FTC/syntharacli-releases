@@ -1,0 +1,33 @@
+# gitleaks-Konfiguration (Advisori-FTC, 21.11.2026: „Keine Passwörter im Code“)
+# Standardregeln von gitleaks + eigene Regeln. Allowlist NUR für nachweislich falsche Treffer
+# (Platzhalter ohne System dahinter). Echte Werte gehören nach Infisical/Env, nie hierher.
+title = "Advisori-FTC gitleaks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "advisori-passwort-zuweisung"
+description = "Passwort/Secret als Literal zugewiesen"
+regex = '''(?i)(?:password|passwort|passwd|pwd|secret|client_secret|api_key|apikey|auth_token)["']?\s*[:=]\s*["']([^"'\s$<{]{8,})["']'''
+secretGroup = 1
+entropy = 2.5
+keywords = ["password", "passwort", "passwd", "pwd", "secret", "api_key", "apikey", "auth_token"]
+
+[[rules]]
+id = "advisori-connection-string-mit-passwort"
+description = "Connection-String mit eingebettetem Passwort"
+regex = '''(?i)\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|rediss|amqps?|mssql|sqlserver)://[^:/\s"'@]+:([^@\s"'$<{]{4,})@'''
+secretGroup = 1
+keywords = ["://"]
+
+[allowlist]
+description = "Platzhalter und generierte Dateien"
+regexTarget = "match"
+regexes = [
+  '''(?i)(?:changeme|change-me|platzhalter|placeholder|example|beispiel|dummy|your[_-]?(?:password|secret|key|token)|<[^>]+>|\$\{[^}]+\}|\{\{[^}]+\}\})''',
+]
+paths = [
+  '''(?:^|/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|poetry\.lock|uv\.lock|Cargo\.lock|go\.sum)$''',
+  '''(?:^|/)node_modules/''',
+]
